@@ -3,9 +3,6 @@
   "version": "1.0.0",
   "description": "Git hook to check Jira issue work log",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "keywords": [
     "git",
     "hook",
@@ -16,5 +13,9 @@
     "track"
   ],
   "author": "Venelin Manchev <venelinphp@gmail.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "inquirer": "^6.2.2",
+    "parse-git-config": "^3.0.0"
+  }
 }
