@@ -16,6 +16,7 @@
   "license": "MIT",
   "dependencies": {
     "inquirer": "^6.2.2",
-    "parse-git-config": "^3.0.0"
+    "parse-git-config": "^3.0.0",
+    "request": "^2.88.0"
   }
 }
