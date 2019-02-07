@@ -38,7 +38,6 @@ const setupQuestions = [
     type: "input",
     name: "email",
     message: "Jira login email:",
-    // default: gitConfig ? gitConfig.email : null,
     validate: email => !!email.length && /\w+@\w+/.test(email)
   },
   {
@@ -58,21 +57,19 @@ const setupQuestions = [
     type: "list",
     name: "type",
     message: "What type of git hook you want to use for worklog?",
-    choices: hookTypeOptions,
-    // default: gitConfig ? getIndex(hookTypeOptions, gitConfig.type) : null
+    choices: hookTypeOptions
   },
   {
     type: "input",
     name: "url",
     message: "Full Jira board url:",
-    // default: gitConfig ? gitConfig.url : null,
     validate: url => /^https:\/\//.test(url)
   },
   {
     type: "list",
     name: "version",
     message: "Which Jira REST API version your team is using?",
-    choices: versionOptions,
+    choices: versionOptions
     // default: gitConfig ? getIndex(versionOptions, gitConfig.version) : null
   }
 ];
@@ -84,32 +81,75 @@ gitconfig
   .then(data => {
     let worklogConfig = data.worklog;
 
-    // if no config, start the setup process
-    if (!worklogConfig) {
-      runConfig().then(worklogConfig => {
-        checkWorkLog(worklogConfig)
+    const reconfigure = shouldReconfigure();
+
+    /**
+     * If no worklog configuration was found,
+     * or if --reconfigure argument was passed,
+     * start the setup process
+     */
+    if (!worklogConfig || reconfigure) {
+      runConfig(worklogConfig).then(worklogConfig => {
+        // do not check worklog if reconfigure was invoked
+        if (!reconfigure) {
+          checkWorkLog(worklogConfig);
+        }
       });
     } else {
-      checkWorkLog(worklogConfig)
+      checkWorkLog(worklogConfig);
     }
-    
   });
 
-function runConfig() {
+/**
+ * Returns true when --reconfigure argument is passed to the script.
+ */
+function shouldReconfigure() {
+  return !!process.argv[2] && process.argv[2] === "--reconfigure";
+}
+
+function runConfig(worklogConfig) {
   return inquirer
-    .prompt(setupQuestions)
+    .prompt(setDefaults(setupQuestions, worklogConfig))
     .then(answers => updateConfigFile(answers));
 }
 
-function updateConfigFile(worklogConfig) {
-  return gitconfig.set(
-    {
-      worklog: worklogConfig
-    },
-    {
-      location: "local"
+/**
+ * Set default values for setup questions, if previous configuration exists
+ *
+ * @param {Array} setupQuestions 
+ * @param {Object} worklogConfig 
+ */
+function setDefaults(setupQuestions, worklogConfig) {
+  if (!worklogConfig) {
+    return setupQuestions;
+  }
+
+  setupQuestions.map(
+    setupQuestion => {
+      if (setupQuestion.type === 'list') {
+        setupQuestion.default = getIndex(setupQuestion.choices, worklogConfig[setupQuestion.name])
+      } else {
+        setupQuestion.default = worklogConfig[setupQuestion.name];
+      }
+
+      return setupQuestion;
     }
-  ).then(_ => worklogConfig);
+  );
+
+  return setupQuestions;
+}
+
+function updateConfigFile(worklogConfig) {
+  return gitconfig
+    .set(
+      {
+        worklog: worklogConfig
+      },
+      {
+        location: "local"
+      }
+    )
+    .then(_ => worklogConfig);
 }
 
 function checkWorkLog(worklogConfig) {
