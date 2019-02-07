@@ -15,7 +15,7 @@
   "author": "Venelin Manchev <venelinphp@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "inquirer": "^6.2.2",
-    "parse-git-config": "^3.0.0"
+    "gitconfig": "^2.0.8",
+    "inquirer": "^6.2.2"
   }
 }
