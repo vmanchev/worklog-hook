@@ -70,7 +70,6 @@ const setupQuestions = [
     name: "version",
     message: "Which Jira REST API version your team is using?",
     choices: versionOptions
-    // default: gitConfig ? getIndex(versionOptions, gitConfig.version) : null
   }
 ];
 
