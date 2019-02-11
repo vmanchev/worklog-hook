@@ -2,10 +2,6 @@
 
 const inquirer = require("inquirer");
 const gitconfig = require("gitconfig");
-const request = require("request");
-const childProcessExec = require("child_process").exec;
-const util = require("util");
-const exec = util.promisify(childProcessExec);
 
 const hookTypeOptions = [
   {
@@ -89,13 +85,10 @@ gitconfig
      */
     if (!worklogConfig || reconfigure) {
       runConfig(worklogConfig).then(worklogConfig => {
-        // do not check worklog if reconfigure was invoked
-        if (!reconfigure) {
-          checkWorkLog(worklogConfig);
-        }
+        console.log('worklog hook was configured successfully')
       });
     } else {
-      checkWorkLog(worklogConfig);
+      console.log('Configuration for worklog has already been created. If you want to change the config options, start `npm run reconfig`')
     }
   });
 
@@ -151,45 +144,7 @@ function updateConfigFile(worklogConfig) {
     .then(_ => worklogConfig);
 }
 
-function checkWorkLog(worklogConfig) {
-  getJiraCode()
-    .then(branch => sendRequest(branch, worklogConfig))
-    .catch(e => console.log(e.message));
-}
 
-function sendRequest(branch, worklogConfig) {
-  try {
-    getIssue(
-      branch,
-      worklogConfig.url,
-      worklogConfig.version,
-      worklogConfig.email,
-      worklogConfig.password
-    );
-  } catch (e) {
-    console.error(e.message);
-  }
-}
-
-/**
- * Get Jira issue code out of current branch name
- */
-async function getJiraCode() {
-  const branches = await exec("git branch");
-  const parseBranch = branches.stdout
-    .split("\n")
-    .find(b => b.charAt(0) === "*")
-    .trim()
-    .substring(2);
-  return "DN-3815";
-  if (parseBranch && parseBranch.match(/^\w+-\d+/)) {
-    return parseBranch.match(/^\w+-\d+/)[0];
-  }
-
-  throw new Error(
-    "Branch name " + parseBranch + " does not match naming convention"
-  );
-}
 
 /**
  * Returns object index in collection, by value
@@ -201,39 +156,4 @@ function getIndex(collection, value) {
   return collection.map(e => e.value).indexOf(value);
 }
 
-function getIssue(branch, url, version, email, password) {
-  console.log("=".repeat(50));
-  console.log(`Verifying worklog for task ${branch}`);
-  console.log("=".repeat(50));
 
-  var credentials = Buffer.from(email + ":" + password).toString("base64");
-
-  var options = {
-    method: "GET",
-    url: `${url}/rest/api/${version}/issue/${branch}/worklog`,
-    headers: {
-      Authorization: "Basic " + credentials,
-      Accept: "application/json"
-    }
-  };
-
-  request(options, function(error, response, body) {
-    if (error) throw new Error(error);
-
-    const wl = JSON.parse(body);
-
-    console.log(`Registered worklogs: ${wl.total}`);
-    console.log("-".repeat(50));
-
-    if (wl.total) {
-      wl.worklogs.forEach(work => {
-        console.log(`${work.author.displayName}\t${work.timeSpent}`);
-      });
-
-      console.log("-".repeat(50));
-    } else {
-      console.error("You must log time for this task!");
-      console.log("^".repeat(50));
-    }
-  });
-}

@@ -15,8 +15,17 @@
   "author": "Venelin Manchev <venelinphp@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "chalk": "^2.4.2",
     "gitconfig": "^2.0.8",
     "inquirer": "^6.2.2",
-    "request": "^2.88.0"
+    "request": "^2.88.0",
+    "tty-table": "^2.7.0"
+  },
+  "scripts": {
+    "worklog": "node hook.js",
+    "config": "node config.js",
+    "reconfig": "node config.js --reconfigure",
+    "install": "node install.js",
+    "uninstall": "node uninstall.js"
   }
 }
